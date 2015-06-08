@@ -1,24 +1,36 @@
 #!/usr/bin/env ruby
+require 'pry'
+
+SUITS = ['hearts', 'spades', 'diamonds', 'clubs']
+VALUES = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A']
 
 class Card
-
   def initialize(rank, suit)
     @rank = rank
     @suit = suit
   end
-
-SUITS = []
-VALUES = []
-  # to represent an individual playing card. This class should contain the suit and
-  # the value and provide methods for determining what type of card
-  # it is (e.g. face card or ace).
+  def face_card?
+    ['K', 'Q', 'J'].include?(@rank)
+  end
 end
+
+binding.pry
 
 class Deck
   def initialize
+    @collection = []
+    SUITS.each do |suit|
+      VALUES.each do |value|
+        @collection << Card.new(value, suit)
+      end
+    end
+    @collection.shuffle!
+    binding.pry
   end
-  # to represent a collection of 52 cards. When dealing a hand this
-  # class can be used to supply the `Card` objects.
+
+  def draw!
+    @collection.pop
+  end
 end
 
 class Hand
@@ -27,3 +39,5 @@ class Hand
   # to represent the player's and dealer's hand. This class will need
   # to determine the best score based on the cards that have been dealt.
 end
+
+Deck.new
