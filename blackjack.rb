@@ -1,67 +1,13 @@
 #!/usr/bin/env ruby
-require 'pry'
+require_relative 'card.rb'
+require_relative 'deck.rb'
+require_relative 'hand.rb'
 
 SUITS = ['♥', '♠', '♦', '♣']
 VALUES = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A']
 
-class Card
- attr_reader :rank, :suit
- def initialize(rank, suit)
-   @rank = rank
-   @suit = suit
- end
- def face_card?
-   ['K', 'Q', 'J'].include?(@rank)
- end
- def ace?
-   ['A'].include?(@rank)
- end
-end
-
-class Deck
- attr_reader :collection
- def initialize
-   @collection = []
-   SUITS.each do |suit|
-     VALUES.each do |value|
-       @collection << Card.new(value, suit)
-     end
-   end
-   @collection.shuffle!
- end
- def draw!
-   @collection.pop
- end
-end
-
-class Hand
- attr_accessor :cards
- def initialize
-   @cards = []
- end
-
- def score
-   points = 0
-   @cards.each do |card|
-     if !card.ace? && !card.face_card?
-       points += card.rank.to_i
-     elsif card.face_card?
-       points += 10
-     else
-       if points + 11 > 21
-         points  += 1
-       else
-         points  += 11
-       end
-     end
-   end
-   points.to_i
- end
-end
-
-
 class Game
- attr_accessor :deck, :player_hand, :dealer_hand, :player_score, :dealer_score, :hit
+ attr_accessor :deck, :player_hand, :dealer_hand, :player_score, :dealer_score
  def initialize
    @deck = Deck.new
    @player_hand = Hand.new
@@ -113,23 +59,6 @@ class Game
    @dealer_score = dealer_hand.score
  end
 
- def win_statement
-   if player_blackjack?
-     puts "You got Blackjack!!! You win!"
-   elsif @player_score > @dealer_score && @player_score < 22
-     puts  "Your score is #{@player_score} and dealer's score is #{@dealer_score}. You win"
-   elsif @player_score > 21
-     puts "Player score: #{@player_score}\n"
-     puts "BUSTED!!! Dealer wins."
-   elsif @player_score == @dealer_score
-     puts "Your score is #{@player_score} and dealer's score is #{@dealer_score}. You tie."
-   elsif @dealer_score > @player_score && @dealer_score < 22
-     puts "Your score is #{@player_score} and dealer's score is #{@dealer_score}. You lose."
-   elsif @dealer_score > 21
-     puts "Dealer busted. You win."
-   end
- end
-
  def dealer_logic
    while @dealer_score < 17
      card = deck.draw!
@@ -138,10 +67,36 @@ class Game
      puts "\nDealer was dealt a #{card.rank}#{card.suit}"
      puts "Dealer score: #{@dealer_score}\n"
    end
-   puts "\nDealer stands." unless @dealer_score > 21
+   puts "\nDealer stands." unless @dealer_score >= 21
+ end
+
+ def win_statement
+   if @player_score > 21
+     puts "Player score: #{@player_score}\n"
+     puts "BUSTED!!! Dealer wins."
+   elsif player_blackjack?
+     puts "You got Blackjack!!! You win!"
+   elsif dealer_blackjack?
+     puts "Dealer got Blackjack!!! You lose!"
+   elsif @dealer_score > 21
+     puts "Dealer Busted! You win!"
+   elsif @player_score > @dealer_score
+     puts "Player score: #{@player_score}"
+     puts "Dealer score: #{@dealer_score}"
+     puts "You win!"
+   elsif @dealer_score > @player_score
+     puts "Player score: #{@player_score}"
+     puts "Dealer score: #{@dealer_score}"
+     puts "You lose!"
+   else
+     puts "Player score: #{@player_score}"
+     puts "Dealer score: #{@dealer_score}"
+     puts "You tie."
+   end
  end
 
  def play
+   puts "Welcome to Blackjack!\n\n"
    player_deal
    until @player_score >= 21
      puts "Player score: #{@player_score}\n"
@@ -150,7 +105,7 @@ class Game
        if input == "h"
          hit
        elsif input == "s"
-         puts "Player score: #{@player_score}"
+         puts "\nPlayer stands."# at #{@player_score}"
          break
        else
          puts "Please select Hit or Stand"
