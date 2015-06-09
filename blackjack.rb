@@ -74,6 +74,7 @@ class Game
    2.times do
      card = deck.draw!
      player_hand.cards << card
+     calculate_score
        puts "Player was delt a #{card.rank}#{card.suit}"
    end
  end
@@ -82,6 +83,7 @@ class Game
    2.times do
      card = deck.draw!
      dealer_hand.cards << card
+     calculate_score
      puts "Dealer was dealt a #{card.rank}#{card.suit}"
    end
  end
@@ -90,6 +92,7 @@ class Game
    puts
    card = deck.draw!
    player_hand.cards << card
+   calculate_score
    puts "Player was dealt a #{card.rank}#{card.suit}"
  end
 
@@ -97,8 +100,12 @@ class Game
    player_score > 21 || dealer_score > 21
  end
 
- def blackjack?
-   @player_score == 21 || @dealer_score == 21
+ def player_blackjack?
+   @player_score == 21
+ end
+
+ def dealer_blackjack?
+   @dealer_score == 21
  end
 
  def calculate_score
@@ -106,55 +113,14 @@ class Game
    @dealer_score = dealer_hand.score
  end
 
- def dealer_score
-   dealer_hand.score
- end
-
- def dealer_logic
-   card = deck.draw!
-   while dealer_score < 17
-     dealer_hand.cards << card
-     calculate_score
-     puts "\nDealer was dealt a #{card.rank}#{card.suit}"
-     puts "Dealer score: #{@dealer_score}\n"
-   end
-   puts "\nDealer stands."
- end
-
- def play
-   puts "BUSTED!!! Player score: #{@player_score}" if busted?
-   puts "You got Blackjack!!! Player score: #{@player_score}" if blackjack?
-
-   until @player_score >= 21
-     puts "Player score: #{@player_score}\n"
-     print "\nHit or Stand? (H/S) "
-     input = gets.chomp.downcase
-       if input != "h" && input != "s"
-         puts "Please select Hit or Stand. (H/S)"
-       elsif input == "h"
-         hit
-         calculate_score
-       end
-       break if input == "s"
-     puts "Player score: #{@player_score}\n\n" unless input != "h" && input != "s"
-   end
-   #puts "BUSTED!!! Player score: #{@player_score}" if busted?
-
-   if @player_score < 22
-     dealer_deal
-     calculate_score
-     puts
-     puts "Dealer score: #{@dealer_score}\n"
-     dealer_logic
-     calculate_score
-     puts
-   else
-   end
-
-   if @player_score > @dealer_score && @player_score < 22
+ def win_statement
+   if player_blackjack?
+     puts "You got Blackjack!!! You win!"
+   elsif @player_score > @dealer_score && @player_score < 22
      puts  "Your score is #{@player_score} and dealer's score is #{@dealer_score}. You win"
    elsif @player_score > 21
-     puts "You busted. Dealer wins."
+     puts "Player score: #{@player_score}\n"
+     puts "BUSTED!!! Dealer wins."
    elsif @player_score == @dealer_score
      puts "Your score is #{@player_score} and dealer's score is #{@dealer_score}. You tie."
    elsif @dealer_score > @player_score && @dealer_score < 22
@@ -163,12 +129,44 @@ class Game
      puts "Dealer busted. You win."
    end
  end
+
+ def dealer_logic
+   while @dealer_score < 17
+     card = deck.draw!
+     dealer_hand.cards << card
+     calculate_score
+     puts "\nDealer was dealt a #{card.rank}#{card.suit}"
+     puts "Dealer score: #{@dealer_score}\n"
+   end
+   puts "\nDealer stands." unless @dealer_score > 21
+ end
+
+ def play
+   player_deal
+   until @player_score >= 21
+     puts "Player score: #{@player_score}\n"
+     print "\nHit or Stand? (H/S) "
+     input = gets.chomp.downcase
+       if input == "h"
+         hit
+       elsif input == "s"
+         puts "Player score: #{@player_score}"
+         break
+       else
+         puts "Please select Hit or Stand"
+       end
+   end
+
+   if @player_score < 22 && player_blackjack? == false
+     puts
+     dealer_deal
+     puts "Dealer score: #{@dealer_score}\n"
+     dealer_logic
+     puts
+   end
+   win_statement
+ end
 end
 
-
 game = Game.new
-game.player_deal
-game.calculate_score
 game.play
-game.calculate_score
-#game.dealer_score
